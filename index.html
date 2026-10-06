@@ -1,0 +1,573 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>soleX Command Centre</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Libre+Caslon+Text:wght@700&display=swap">
+<style>
+/* Layout: fixed top bar + left nav on desktop (nav collapses to a top tab strip on phones); one content pane swapped by tab. */
+:root{
+  --bg:#f5f4f0; --panel:#ffffff; --fg:#1d2430; --muted:#6a7383; --line:#e2e0d9;
+  --navy:#1f2a3a; --navy-fg:#f2efe8; --gold:#b08d57; --gold-soft:#f3ebdd;
+  --ok:#2f7d4f; --ok-soft:#e3f1e8; --warn:#b9770e; --warn-soft:#fbf0d9; --bad:#b23b3b; --bad-soft:#f8e3e3; --info:#2d5fa6; --info-soft:#e3ebf7; --hold:#7a4fb0; --hold-soft:#ece4f6;
+  --display:'Libre Caslon Text',Georgia,serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15191f; --panel:#1d222a; --fg:#e8e6e0; --muted:#9aa3b2; --line:#2e343d; --navy:#0f1419; --navy-fg:#e8e6e0; --gold:#c9a76e; --gold-soft:#2c2619;
+  --ok:#5fbf85; --ok-soft:#1b2e23; --warn:#e0a63a; --warn-soft:#332913; --bad:#e07070; --bad-soft:#36201f; --info:#7ea4e3; --info-soft:#1c2740; --hold:#b494e0; --hold-soft:#2a2138; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15191f; --panel:#1d222a; --fg:#e8e6e0; --muted:#9aa3b2; --line:#2e343d; --navy:#0f1419; --navy-fg:#e8e6e0; --gold:#c9a76e; --gold-soft:#2c2619;
+  --ok:#5fbf85; --ok-soft:#1b2e23; --warn:#e0a63a; --warn-soft:#332913; --bad:#e07070; --bad-soft:#36201f; --info:#7ea4e3; --info-soft:#1c2740; --hold:#b494e0; --hold-soft:#2a2138; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45;margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.top{background:var(--navy);color:var(--navy-fg);display:flex;align-items:center;gap:16px;padding:10px 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.brand{font-family:var(--display);font-size:22px;letter-spacing:-.01em}
+.brand b{color:var(--gold);font-weight:700}
+.top .tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.top .user{margin-left:auto;font-size:12px;opacity:.85;display:flex;gap:10px;align-items:center}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);color:#1d2430;display:grid;place-items:center;font-weight:600;font-size:12px}
+.proto{background:var(--gold-soft);color:var(--fg);font-size:12px;padding:6px 16px;border-bottom:1px solid var(--line)}
+.shell{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 90px)}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+nav button{text-align:left;padding:9px 12px;border-radius:6px;color:var(--muted);font-weight:500;display:flex;gap:10px;align-items:center}
+nav button .n{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:18px}
+nav button.on{background:var(--gold-soft);color:var(--fg)}
+nav button.on .n{color:var(--gold)}
+nav .sec{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 12px 4px}
+main{padding:20px 24px;min-width:0}
+.pane[hidden]{display:none}
+h1{font-family:var(--display);font-weight:700;font-size:22px;margin:0 0 4px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi .l{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:22px;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--muted)}
+.kpi .d.up{color:var(--ok)} .kpi .d.dn{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.card h3 a{font-size:12px;color:var(--gold);font-weight:500;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-info{background:var(--info-soft);color:var(--info)} .p-hold{background:var(--hold-soft);color:var(--hold)} .p-mut{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--gold)}
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel div{display:grid;grid-template-columns:110px 1fr 50px;gap:8px;align-items:center;font-size:12px}
+.funnel .num{font-family:var(--mono);text-align:right}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.toolbar select,.toolbar input{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg)}
+.btn{padding:7px 12px;border-radius:6px;background:var(--navy);color:var(--navy-fg);font-weight:500;font-size:13px}
+.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--fg)}
+.btn.gold{background:var(--gold);color:#1d2430}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin:8px 0 12px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.tower{display:grid;gap:4px}
+.floor{display:grid;grid-template-columns:44px repeat(6,1fr);gap:4px;align-items:center}
+.floor .f{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.unit{border-radius:4px;padding:6px 4px;font-family:var(--mono);font-size:11px;text-align:center;color:#fff;border:0;width:100%}
+.u-av{background:var(--ok)} .u-hold{background:var(--hold)} .u-bk{background:var(--info)} .u-sold{background:var(--navy);color:var(--navy-fg);opacity:.75} .u-blk{background:var(--muted)}
+.unit.sel{outline:3px solid var(--gold);outline-offset:1px}
+.detail dl{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;margin:0;font-size:13px}
+.detail dt{color:var(--muted)} .detail dd{margin:0}
+.detail .mono{font-family:var(--mono)}
+.hist{font-size:12px;color:var(--muted);border-left:2px solid var(--line);padding-left:10px;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.hist b{color:var(--fg);font-weight:500}
+.stages{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.stages span{flex:0 0 auto;padding:4px 10px;border-radius:4px;font-size:12px;background:var(--panel);border:1px solid var(--line);color:var(--muted);display:flex;gap:6px}
+.stages span b{font-family:var(--mono);color:var(--fg);font-weight:500}
+.steps{display:flex;gap:0;margin-bottom:16px;overflow-x:auto}
+.steps div{flex:1;min-width:110px;padding:8px 10px;border:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted);position:relative}
+.steps div:first-child{border-radius:6px 0 0 6px}.steps div:last-child{border-radius:0 6px 6px 0}
+.steps div.done{background:var(--ok-soft);color:var(--ok)} .steps div.cur{background:var(--gold-soft);color:var(--fg);font-weight:500}
+.sched{display:grid;grid-template-columns:1fr;gap:8px}
+.alert{display:flex;gap:10px;padding:8px 10px;border-radius:6px;font-size:12px;align-items:flex-start;margin-bottom:6px}
+.alert.warn{background:var(--warn-soft);color:var(--warn)} .alert.bad{background:var(--bad-soft);color:var(--bad)} .alert.info{background:var(--info-soft);color:var(--info)}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--navy);color:var(--navy-fg);padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px 8px}
+  nav .sec{display:none} nav button{white-space:nowrap;padding:7px 10px}
+  main{padding:16px}
+  .grid2{grid-template-columns:1fr}
+  .top .tag,.top .user span{display:none}
+}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<div class="top">
+  <div class="brand">sole<b>X</b></div>
+  <div class="tag">Command Centre</div>
+  <div class="user"><span>Ankit Shah · Super Admin</span><div class="avatar">AS</div></div>
+</div>
+<div class="proto">Clickable prototype prepared for soleX Reality's Technology Partner RFP · sample data only · all figures illustrative</div>
+
+<div class="shell">
+<nav>
+  <div class="sec">Operations</div>
+  <button class="on" data-tab="dash"><span class="n">01</span>Dashboard</button>
+  <button data-tab="inv"><span class="n">02</span>Inventory</button>
+  <button data-tab="leads"><span class="n">03</span>Leads &amp; CRM</button>
+  <button data-tab="visits"><span class="n">04</span>Site visits</button>
+  <button data-tab="book"><span class="n">05</span>Bookings</button>
+  <div class="sec">Finance</div>
+  <button data-tab="coll"><span class="n">06</span>Collections</button>
+  <button data-tab="comm"><span class="n">07</span>Commissions</button>
+  <div class="sec">Partner portals</div>
+  <button data-tab="dev"><span class="n">08</span>Developer view</button>
+  <button data-tab="broker"><span class="n">09</span>Broker view</button>
+</nav>
+
+<main>
+
+<!-- DASHBOARD -->
+<section class="pane" id="dash">
+  <h1>Good morning, Ankit</h1>
+  <p class="sub">Tuesday, 6 October 2026 · 4 active mandates · 3 approvals waiting for you</p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Inventory value</div><div class="v">₹186.4 Cr</div><div class="d">412 units across 4 projects</div></div>
+    <div class="kpi"><div class="l">Sold value</div><div class="v">₹61.2 Cr</div><div class="d up">▲ ₹8.4 Cr this month</div></div>
+    <div class="kpi"><div class="l">Bookings (Oct)</div><div class="v">14</div><div class="d up">▲ 3 vs Sep</div></div>
+    <div class="kpi"><div class="l">Open leads</div><div class="v">327</div><div class="d dn">41 overdue follow-ups</div></div>
+    <div class="kpi"><div class="l">Site visits (week)</div><div class="v">38</div><div class="d">conversion 18%</div></div>
+    <div class="kpi"><div class="l">Commission receivable</div><div class="v">₹2.18 Cr</div><div class="d dn">₹64 L overdue &gt; 60 days</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Inventory by project <a data-go="inv">Open inventory →</a></h3>
+      <div class="tw"><table>
+        <tr><th>Project</th><th>Developer</th><th class="num">Units</th><th class="num">Sold</th><th>Progress</th><th class="num">Unsold value</th></tr>
+        <tr><td>Skyline Heights</td><td>Avani Developers</td><td class="num">148</td><td class="num">61</td><td><div class="bar"><i style="width:41%"></i></div></td><td class="num">₹52.6 Cr</td></tr>
+        <tr><td>Riverside Enclave</td><td>Nirmaan Group</td><td class="num">96</td><td class="num">52</td><td><div class="bar"><i style="width:54%"></i></div></td><td class="num">₹27.1 Cr</td></tr>
+        <tr><td>Palm Courtyard</td><td>Avani Developers</td><td class="num">120</td><td class="num">19</td><td><div class="bar"><i style="width:16%"></i></div></td><td class="num">₹38.9 Cr</td></tr>
+        <tr><td>Westgate Plaza (commercial)</td><td>Shree Infra</td><td class="num">48</td><td class="num">9</td><td><div class="bar"><i style="width:19%"></i></div></td><td class="num">₹6.6 Cr</td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Lead funnel · last 30 days <a data-go="leads">Open CRM →</a></h3>
+      <div class="funnel">
+        <div><span>New</span><div class="bar"><i style="width:100%"></i></div><span class="num">412</span></div>
+        <div><span>Contacted</span><div class="bar"><i style="width:78%"></i></div><span class="num">321</span></div>
+        <div><span>Qualified</span><div class="bar"><i style="width:44%"></i></div><span class="num">181</span></div>
+        <div><span>Site visit</span><div class="bar"><i style="width:24%"></i></div><span class="num">98</span></div>
+        <div><span>Negotiation</span><div class="bar"><i style="width:9%"></i></div><span class="num">37</span></div>
+        <div><span>Booked</span><div class="bar"><i style="width:4%"></i></div><span class="num">18</span></div>
+      </div>
+      <p class="note">Top source this month: Meta lead ads (143 leads, 6 bookings). Broker-submitted: 88 leads, 7 bookings.</p>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Pending approvals</h3>
+      <div class="tw"><table>
+        <tr><th>Item</th><th>Raised by</th><th>Detail</th><th></th></tr>
+        <tr><td>Discount request</td><td>Priya Nair (Sales)</td><td>Skyline B-1204 · 4.5% on ₹1.42 Cr</td><td><button class="btn gold" data-remove data-toast="Discount approved. Booking B-1204 can proceed. Logged in audit trail.">Approve</button></td></tr>
+        <tr><td>Broker KYC</td><td>Rahul Mehta (Broker)</td><td>PAN + RERA no. uploaded</td><td><button class="btn ghost" data-remove data-toast="KYC approved. Broker code BRK-0218 issued.">Approve</button></td></tr>
+        <tr><td>Unit price revision</td><td>Ops</td><td>Palm Courtyard tower C · +2.5%</td><td><button class="btn ghost" data-remove data-toast="Price revision applied to 40 units. Old prices kept in history.">Approve</button></td></tr>
+      </table></div>
+      <p class="note" id="appr-empty" hidden>Nothing pending. Approvals you clear here are recorded with your name and time.</p>
+    </div>
+    <div class="card">
+      <h3>Alerts</h3>
+      <div class="alert bad">⚠ <div><b>Avani Developers</b> · ₹38 L commission overdue 74 days on Skyline Heights.</div></div>
+      <div class="alert warn">⏱ <div><b>12 unit holds</b> expire today across Riverside Enclave. Convert or release.</div></div>
+      <div class="alert warn">↩ <div><b>41 leads</b> have no follow-up in 7+ days. 23 are assigned to Karan Shah.</div></div>
+      <div class="alert info">ℹ <div>Site-visit no-show rate rose to 31% this week (avg 22%).</div></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Sales team · this month</h3>
+      <div class="tw"><table>
+        <tr><th>Employee</th><th class="num">Leads</th><th class="num">Visits</th><th class="num">Bookings</th><th class="num">Target</th><th>Progress</th></tr>
+        <tr><td>Priya Nair</td><td class="num">64</td><td class="num">17</td><td class="num">5</td><td class="num">6</td><td><div class="bar"><i style="width:83%"></i></div></td></tr>
+        <tr><td>Karan Shah</td><td class="num">71</td><td class="num">9</td><td class="num">2</td><td class="num">6</td><td><div class="bar"><i style="width:33%"></i></div></td></tr>
+        <tr><td>Neha Joshi</td><td class="num">48</td><td class="num">12</td><td class="num">4</td><td class="num">5</td><td><div class="bar"><i style="width:80%"></i></div></td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Top brokers · this quarter <a data-go="broker">Broker portal →</a></h3>
+      <div class="tw"><table>
+        <tr><th>Broker</th><th class="num">Leads</th><th class="num">Bookings</th><th class="num">Sales value</th><th class="num">Payable</th></tr>
+        <tr><td>Rahul Mehta · BRK-0218</td><td class="num">31</td><td class="num">4</td><td class="num">₹3.9 Cr</td><td class="num">₹2.41 L</td></tr>
+        <tr><td>Homes4U · BRK-0102</td><td class="num">26</td><td class="num">3</td><td class="num">₹2.7 Cr</td><td class="num">₹1.35 L</td></tr>
+        <tr><td>S. Parikh · BRK-0177</td><td class="num">18</td><td class="num">2</td><td class="num">₹1.6 Cr</td><td class="num">₹0.80 L</td></tr>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- SITE VISITS -->
+<section class="pane" id="visits" hidden>
+  <h1>Site visits</h1>
+  <p class="sub">This week: 38 scheduled · 26 completed · 8 no-show · 4 cancelled · visit→booking 18%</p>
+  <div class="toolbar">
+    <select id="sv-day"><option>Today · Tue 6 Oct</option><option>Wed 7 Oct</option><option>Sat 10 Oct</option></select>
+    <select id="sv-proj"><option>All projects</option><option>Skyline Heights</option><option>Riverside Enclave</option></select>
+    <button class="btn ghost" data-toast="Visit summary PDF exported for today.">Export</button>
+    <button class="btn" data-toast="New visit form opened. Customer, project/unit, assigned employee or broker, date/time.">+ Schedule visit</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>Time</th><th>Customer</th><th>Project / interest</th><th>Taken by</th><th>Status</th><th>Outcome / next action</th><th></th></tr>
+      <tr><td class="num">10:30</td><td>Rakesh Modi</td><td>Skyline Heights · 2 BHK</td><td>Priya Nair</td><td><span class="pill p-ok">Completed</span></td><td>Liked A-803 · price objection · follow-up Thu</td><td><button class="btn ghost" data-toast="Feedback form opened for Rakesh Modi.">Feedback</button></td></tr>
+      <tr><td class="num">11:30</td><td>Fatima Sheikh</td><td>Palm Courtyard · 3 BHK</td><td>Neha Joshi</td><td><span class="pill p-info">Confirmed</span></td><td>Pick-up from Vastrapur · brochure sent</td><td><button class="btn ghost" data-toast="Marked as completed. Feedback requested from Neha Joshi.">Mark done</button></td></tr>
+      <tr><td class="num">13:00</td><td>Sanjay Trivedi</td><td>Riverside Enclave · A-903</td><td>Rahul Mehta (broker)</td><td><span class="pill p-warn">Unconfirmed</span></td><td>No reply to WhatsApp confirmation</td><td><button class="btn ghost" data-toast="Confirmation call logged. Visit confirmed for 13:00.">Confirm</button></td></tr>
+      <tr><td class="num">15:00</td><td>Alpesh Desai</td><td>Westgate Plaza · office</td><td>Karan Shah</td><td><span class="pill p-bad">No-show</span></td><td>Reschedule suggested · 2nd no-show</td><td><button class="btn ghost" data-toast="Reschedule link sent via WhatsApp.">Reschedule</button></td></tr>
+      <tr><td class="num">17:00</td><td>Meera Desai</td><td>Skyline Heights · B-1204 (2nd visit)</td><td>Priya Nair</td><td><span class="pill p-info">Confirmed</span></td><td>Bring cost sheet v3 · discount pending</td><td><button class="btn ghost" data-go="book">Open booking</button></td></tr>
+    </table></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h3>Visit → booking conversion · last 8 weeks</h3>
+      <div class="funnel">
+        <div><span>Skyline Heights</span><div class="bar"><i style="width:72%"></i></div><span class="num">24%</span></div>
+        <div><span>Riverside Enclave</span><div class="bar"><i style="width:60%"></i></div><span class="num">20%</span></div>
+        <div><span>Palm Courtyard</span><div class="bar"><i style="width:36%"></i></div><span class="num">12%</span></div>
+        <div><span>Westgate Plaza</span><div class="bar"><i style="width:27%"></i></div><span class="num">9%</span></div>
+      </div>
+      <p class="note">Automated reminders go out 24 h and 2 h before every confirmed visit (WhatsApp, with SMS fallback).</p>
+    </div>
+    <div class="card">
+      <h3>Feedback · Rakesh Modi · Skyline A-803</h3>
+      <div class="hist">
+        <div><b>Rating</b> · 4/5 · "good location, liked the club house"</div>
+        <div><b>Objection</b> · price ₹1.08 Cr vs budget ₹1 Cr</div>
+        <div><b>Competing</b> · Riverside Enclave (visited last week)</div>
+        <div><b>Next action</b> · Priya to share 2-year payment plan by Thu</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INVENTORY -->
+<section class="pane" id="inv" hidden>
+  <h1>Inventory · Skyline Heights, Tower B</h1>
+  <p class="sub">Avani Developers · RERA PR/GJ/AHMEDABAD/123456 · 2 &amp; 3 BHK · possession Dec 2027</p>
+  <div class="toolbar">
+    <select id="inv-proj"><option>Skyline Heights</option><option>Riverside Enclave</option><option>Palm Courtyard</option><option>Westgate Plaza</option></select>
+    <select id="inv-tower"><option>Tower B</option><option>Tower A</option><option>Tower C</option></select>
+    <input id="inv-q" placeholder="Search unit no." style="width:140px">
+    <button class="btn ghost" data-toast="Import template downloaded (Excel).">Bulk import</button>
+    <button class="btn ghost" data-toast="Inventory report exported.">Export</button>
+    <button class="btn" data-toast="Price revision needs Super Admin approval. Sent for approval.">Revise prices</button>
+  </div>
+  <div class="legend"><span style="--c:var(--ok)">Available</span><span style="--c:var(--hold)">On hold</span><span style="--c:var(--info)">Booked</span><span style="--c:var(--navy)">Sold / registered</span><span style="--c:var(--muted)">Blocked</span></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Floor plan view <span class="pill p-mut">click any unit</span></h3>
+      <div class="tower" id="tower"></div>
+      <p class="note">Hold = reserved by a salesperson for 48 h, auto-released. Double booking is blocked at the database level, not only in the UI.</p>
+    </div>
+    <div class="card detail">
+      <h3 id="u-title">Unit B-1204</h3>
+      <dl id="u-dl">
+        <dt>Status</dt><dd><span class="pill p-hold">On hold · expires 18:30 today</span></dd>
+        <dt>Type</dt><dd>3 BHK · 1,640 sq ft carpet · east facing</dd>
+        <dt>Base price</dt><dd class="mono">₹1,36,40,000</dd>
+        <dt>Other charges</dt><dd class="mono">₹5,60,000 (PLC + parking + club)</dd>
+        <dt>Total</dt><dd class="mono"><b>₹1,42,00,000</b></dd>
+        <dt>Payment plan</dt><dd>20:30:30:20 construction-linked</dd>
+        <dt>Held by</dt><dd>Priya Nair for lead Meera Desai</dd>
+      </dl>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn gold" data-go="book" data-toast="Booking started for B-1204.">Start booking</button>
+        <button class="btn ghost" data-toast="Hold released. Unit B-1204 is available again.">Release hold</button>
+      </div>
+      <div class="hist">
+        <div><b>Today 10:12</b> · Hold placed by Priya Nair</div>
+        <div><b>28 Sep</b> · Price revised ₹1,32,00,000 → ₹1,36,40,000 by Ops (approved by Ankit Shah)</div>
+        <div><b>14 Aug</b> · Hold placed by Karan Shah, expired unused</div>
+        <div><b>02 Jun</b> · Unit created via bulk import</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADS -->
+<section class="pane" id="leads" hidden>
+  <h1>Leads &amp; CRM</h1>
+  <p class="sub">327 open leads · 41 overdue · duplicates auto-merged this week: 9</p>
+  <div class="stages">
+    <span>New <b>64</b></span><span>Contacted <b>88</b></span><span>Qualified <b>71</b></span><span>Follow-up <b>52</b></span><span>Visit planned <b>24</b></span><span>Visit done <b>19</b></span><span>Negotiation <b>9</b></span><span>Lost (30d) <b>47</b></span>
+  </div>
+  <div class="toolbar">
+    <select id="ld-f1"><option>All projects</option><option>Skyline Heights</option><option>Riverside Enclave</option></select>
+    <select id="ld-f2"><option>All owners</option><option>Priya Nair</option><option>Karan Shah</option><option>Broker leads</option></select>
+    <select id="ld-f3"><option>All sources</option><option>Meta ads</option><option>Website</option><option>Broker</option><option>Walk-in</option></select>
+    <button class="btn ghost" data-toast="Showing 41 overdue leads.">Overdue only</button>
+    <button class="btn" data-toast="New lead form opened.">+ Add lead</button>
+  </div>
+  <div class="card">
+    <div class="tw"><table>
+      <tr><th>Lead</th><th>Project / budget</th><th>Source</th><th>Owner</th><th>Stage</th><th>Next follow-up</th><th></th></tr>
+      <tr><td><b>Meera Desai</b><br><span class="note">98xxx 41022 · Satellite, Ahmedabad</span></td><td>Skyline Heights · ₹1.3–1.5 Cr · 3 BHK</td><td>Meta ads</td><td>Priya Nair</td><td><span class="pill p-info">Negotiation</span></td><td>Today 17:00</td><td><button class="btn ghost" data-toast="Call logged. Next follow-up set for tomorrow 11:00.">Log call</button></td></tr>
+      <tr><td><b>Sanjay Trivedi</b><br><span class="note">99xxx 20871 · Bopal</span></td><td>Riverside Enclave · ₹70–85 L · 2 BHK</td><td>Broker · Rahul Mehta</td><td>Karan Shah</td><td><span class="pill p-warn">Follow-up</span></td><td><span class="pill p-bad">Overdue 9 d</span></td><td><button class="btn ghost" data-toast="Reassigned to Priya Nair. Lead ownership change recorded in audit log.">Reassign</button></td></tr>
+      <tr><td><b>Fatima Sheikh</b><br><span class="note">97xxx 55310 · Vastrapur</span></td><td>Palm Courtyard · ₹90 L–1.1 Cr</td><td>Website</td><td>Priya Nair</td><td><span class="pill p-ok">Visit planned</span></td><td>Sat 11:30 · site visit</td><td><button class="btn ghost" data-toast="WhatsApp reminder sent (template: visit_reminder).">Remind</button></td></tr>
+      <tr><td><b>Dhruv Patel</b><br><span class="note">98xxx 77091 · Gandhinagar</span></td><td>Westgate Plaza · office 800 sq ft</td><td>Walk-in</td><td>Karan Shah</td><td><span class="pill p-mut">New</span></td><td>Unassigned</td><td><button class="btn ghost" data-toast="Assigned by rule: Westgate walk-ins → Karan Shah.">Auto-assign</button></td></tr>
+      <tr><td><b>Nisha Rao</b><br><span class="note">96xxx 10234 · Prahlad Nagar</span></td><td>Skyline Heights · ₹1.2 Cr</td><td>Meta ads</td><td>—</td><td><span class="pill p-bad">Possible duplicate</span></td><td>—</td><td><button class="btn ghost" data-toast="Merged with existing lead Nisha Rao (created 12 Sep). Source attribution kept.">Merge</button></td></tr>
+    </table></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h3>Lead timeline · Meera Desai</h3>
+      <div class="hist">
+        <div><b>Today 10:12</b> · Unit B-1204 put on hold by Priya Nair</div>
+        <div><b>4 Oct</b> · Site visit completed · feedback: "liked east facing, wants 4% discount"</div>
+        <div><b>1 Oct</b> · WhatsApp: brochure + price sheet sent (delivered, read)</div>
+        <div><b>29 Sep</b> · Call 6 min · qualified · budget confirmed ₹1.3–1.5 Cr</div>
+        <div><b>28 Sep</b> · Lead created from Meta campaign "Skyline-Oct-3BHK"</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Phase 5 preview · AI suggestions <span class="pill p-mut">optional</span></h3>
+      <div class="alert info">★ <div><b>Hot lead (score 86).</b> Visited, budget matches, hold placed. Suggested next action: send discount approval today, offer booking slot this weekend.</div></div>
+      <div class="alert warn">↩ <div>Karan Shah has 23 overdue leads; 9 are Meta leads older than 14 days. Suggest reassigning the oldest 5.</div></div>
+      <p class="note">AI features are proposed for Phase 5, after 2–3 months of real data. Costs shown separately.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKINGS -->
+<section class="pane" id="book" hidden>
+  <h1>Booking · BK-2026-0142</h1>
+  <p class="sub">Skyline Heights B-1204 · Meera Desai · created today by Priya Nair</p>
+  <div class="steps">
+    <div class="done">1 · Unit &amp; customer</div><div class="done">2 · Commercial terms</div><div class="cur">3 · Discount approval</div><div>4 · Documents &amp; KYC</div><div>5 · Payment schedule</div><div>6 · Confirmed</div>
+  </div>
+  <div class="grid2">
+    <div class="card detail">
+      <h3>Commercial terms</h3>
+      <dl>
+        <dt>Agreement value</dt><dd class="mono">₹1,42,00,000</dd>
+        <dt>Discount requested</dt><dd class="mono">4.5% · ₹6,39,000 <span class="pill p-warn">awaiting Super Admin</span></dd>
+        <dt>Net value</dt><dd class="mono"><b>₹1,35,61,000</b></dd>
+        <dt>Booking amount</dt><dd class="mono">₹5,00,000 · received via NEFT · UTR N27610…</dd>
+        <dt>Payment plan</dt><dd>20% on agreement · 30% plinth · 30% 10th slab · 20% possession</dd>
+        <dt>Channel</dt><dd>Direct (Meta ads) · no broker commission</dd>
+        <dt>soleX commission</dt><dd class="mono">2.0% of net = ₹2,71,220 · payable by Avani on 20% collection</dd>
+      </dl>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn gold" data-toast="Discount approved. Booking moved to step 4: Documents & KYC.">Approve discount (Super Admin)</button>
+        <button class="btn ghost" data-toast="Sent back to Priya Nair with a comment.">Send back</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Documents</h3>
+      <div class="tw"><table>
+        <tr><th>Document</th><th>Status</th></tr>
+        <tr><td>Application form (signed)</td><td><span class="pill p-ok">Uploaded</span></td></tr>
+        <tr><td>Customer PAN &amp; Aadhaar</td><td><span class="pill p-ok">Uploaded</span></td></tr>
+        <tr><td>Booking receipt</td><td><span class="pill p-info">Auto-generated on confirmation</span></td></tr>
+        <tr><td>Cost sheet v3</td><td><span class="pill p-ok">Generated</span></td></tr>
+        <tr><td>Allotment letter (developer)</td><td><span class="pill p-mut">Pending from Avani</span></td></tr>
+      </table></div>
+      <h3 style="margin-top:14px">Audit trail</h3>
+      <div class="hist">
+        <div><b>11:40</b> · Discount request raised by Priya Nair (4.5%, reason: competing offer at Riverside)</div>
+        <div><b>11:05</b> · Booking amount ₹5,00,000 recorded by Finance (Amit Joshi)</div>
+        <div><b>10:50</b> · Booking created from hold · unit status Hold → Booking initiated</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COLLECTIONS -->
+<section class="pane" id="coll" hidden>
+  <h1>Collections &amp; payment tracking</h1>
+  <p class="sub">Customer payments go to developers' accounts; soleX records, reconciles and chases</p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Due this month</div><div class="v">₹9.4 Cr</div><div class="d">62 instalments</div></div>
+    <div class="kpi"><div class="l">Received</div><div class="v">₹6.1 Cr</div><div class="d up">65% of due</div></div>
+    <div class="kpi"><div class="l">Overdue</div><div class="v">₹2.7 Cr</div><div class="d dn">19 customers</div></div>
+    <div class="kpi"><div class="l">Unreconciled</div><div class="v">7</div><div class="d">receipts awaiting developer confirmation</div></div>
+  </div>
+  <div class="card">
+    <h3>Overdue instalments <a data-toast="Reminder batch sent to 19 customers via WhatsApp + email.">Send reminders →</a></h3>
+    <div class="tw"><table>
+      <tr><th>Customer</th><th>Project / unit</th><th>Milestone</th><th class="num">Amount</th><th>Due</th><th>Status</th><th>RM</th></tr>
+      <tr><td>Harsh Bhatt</td><td>Riverside A-702</td><td>Plinth (30%)</td><td class="num">₹24,60,000</td><td>12 Sep</td><td><span class="pill p-bad">24 d overdue</span></td><td>Karan Shah</td></tr>
+      <tr><td>Kavita Menon</td><td>Skyline A-1503</td><td>10th slab (30%)</td><td class="num">₹41,10,000</td><td>20 Sep</td><td><span class="pill p-bad">16 d overdue</span></td><td>Priya Nair</td></tr>
+      <tr><td>Rohan Iyer</td><td>Palm C-304</td><td>Agreement (20%)</td><td class="num">₹18,80,000</td><td>29 Sep</td><td><span class="pill p-warn">7 d overdue</span></td><td>Priya Nair</td></tr>
+      <tr><td>Deepa Shah</td><td>Westgate G-12</td><td>Possession (20%)</td><td class="num">₹11,00,000</td><td>3 Oct</td><td><span class="pill p-warn">Part paid ₹6 L</span></td><td>Karan Shah</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<!-- COMMISSIONS -->
+<section class="pane" id="comm" hidden>
+  <h1>Commissions &amp; settlements</h1>
+  <p class="sub">Rules configured per mandate; every calculation is traceable to a booking and a collection</p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Expected (open bookings)</div><div class="v">₹4.62 Cr</div><div class="d">from developers</div></div>
+    <div class="kpi"><div class="l">Earned (milestone hit)</div><div class="v">₹2.18 Cr</div><div class="d">invoiceable</div></div>
+    <div class="kpi"><div class="l">Received</div><div class="v">₹1.41 Cr</div><div class="d dn">₹64 L overdue</div></div>
+    <div class="kpi"><div class="l">Payable to brokers</div><div class="v">₹38.2 L</div><div class="d">11 brokers · 3 statements pending</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Developer-wise receivable</h3>
+      <div class="tw"><table>
+        <tr><th>Developer</th><th class="num">Earned</th><th class="num">Received</th><th class="num">Outstanding</th><th>Oldest</th></tr>
+        <tr><td>Avani Developers</td><td class="num">₹1,21,40,000</td><td class="num">₹71,20,000</td><td class="num">₹50,20,000</td><td><span class="pill p-bad">74 d</span></td></tr>
+        <tr><td>Nirmaan Group</td><td class="num">₹68,10,000</td><td class="num">₹55,00,000</td><td class="num">₹13,10,000</td><td><span class="pill p-warn">38 d</span></td></tr>
+        <tr><td>Shree Infra</td><td class="num">₹28,50,000</td><td class="num">₹14,80,000</td><td class="num">₹13,70,000</td><td><span class="pill p-ok">12 d</span></td></tr>
+      </table></div>
+    </div>
+    <div class="card detail">
+      <h3>Mandate rule · Skyline Heights</h3>
+      <dl>
+        <dt>Developer pays</dt><dd>2.0% of net agreement value; 2.25% above ₹10 Cr/quarter</dd>
+        <dt>Trigger</dt><dd>50% on 20% collection, 50% on agreement registration</dd>
+        <dt>Broker share</dt><dd>1.0% of net (broker-sourced only), paid after soleX receives</dd>
+        <dt>Employee incentive</dt><dd>₹25,000 per booking + ₹10,000 if within 30 days of first visit</dd>
+        <dt>Adjustments</dt><dd>Cancellation claws back unpaid share; approved by Finance</dd>
+      </dl>
+      <div class="toolbar" style="margin-top:12px"><button class="btn ghost" data-toast="Rule editor opened. Changes need Super Admin approval and are versioned.">Edit rule</button><button class="btn ghost" data-toast="Statement generated for Rahul Mehta: ₹4,21,000 payable (3 bookings).">Generate broker statement</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEVELOPER -->
+<section class="pane" id="dev" hidden>
+  <h1>Developer portal · Avani Developers</h1>
+  <p class="sub">Logged in as Mehul Avani (Director) · sees Skyline Heights and Palm Courtyard only · no soleX internal data</p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Units sold (both projects)</div><div class="v">80 / 268</div><div class="d up">▲ 9 this month</div></div>
+    <div class="kpi"><div class="l">Sales value</div><div class="v">₹71.4 Cr</div><div class="d">agreement value, net of discounts</div></div>
+    <div class="kpi"><div class="l">Collections due from customers</div><div class="v">₹5.8 Cr</div><div class="d dn">₹1.9 Cr overdue</div></div>
+    <div class="kpi"><div class="l">Commission payable to soleX</div><div class="v">₹50.2 L</div><div class="d dn">₹38 L overdue 74 d</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Sales pipeline · Skyline Heights <span class="pill p-mut">live</span></h3>
+      <div class="tw"><table>
+        <tr><th>Unit</th><th>Customer</th><th>Stage</th><th class="num">Net value</th><th>Allotment letter</th></tr>
+        <tr><td>B-1204</td><td>M. Desai</td><td><span class="pill p-warn">Booking in progress</span></td><td class="num">₹1,35,61,000</td><td><button class="btn ghost" data-toast="Allotment letter uploaded. soleX and customer notified.">Upload</button></td></tr>
+        <tr><td>A-1503</td><td>K. Menon</td><td><span class="pill p-info">Booked · 20% paid</span></td><td class="num">₹1,37,00,000</td><td><span class="pill p-ok">Issued</span></td></tr>
+        <tr><td>A-803</td><td>R. Modi</td><td><span class="pill p-mut">Visited · negotiating</span></td><td class="num">—</td><td>—</td></tr>
+        <tr><td>C-402</td><td>P. Iyer</td><td><span class="pill p-ok">Registered</span></td><td class="num">₹94,00,000</td><td><span class="pill p-ok">Issued</span></td></tr>
+      </table></div>
+      <p class="note">Developer sees customer name, unit, stage and value for their own projects. Lead source, broker identity, soleX margins and other developers' data are never visible.</p>
+    </div>
+    <div class="card">
+      <h3>Approvals requested by soleX</h3>
+      <div class="tw"><table>
+        <tr><th>Request</th><th>Detail</th><th></th></tr>
+        <tr><td>Discount above 4%</td><td>B-1204 · 4.5% · competing offer</td><td><button class="btn gold" data-remove data-toast="Approved. soleX notified; booking proceeds.">Approve</button></td></tr>
+        <tr><td>Price sheet v8</td><td>Tower C +2.5% from 15 Oct</td><td><button class="btn ghost" data-remove data-toast="Acknowledged. Price sheet v8 goes live on 15 Oct.">Acknowledge</button></td></tr>
+      </table></div>
+      <h3 style="margin-top:14px">Monthly MIS <a data-toast="Sales & collections MIS (Sep 2026) downloaded as Excel.">Download Excel →</a></h3>
+      <div class="hist">
+        <div><b>Sep 2026</b> · 9 bookings · ₹10.8 Cr · collections ₹6.2 Cr · commission invoiced ₹21.6 L</div>
+        <div><b>Aug 2026</b> · 7 bookings · ₹8.1 Cr · collections ₹5.4 Cr · commission invoiced ₹16.2 L</div>
+        <div><b>Jul 2026</b> · 11 bookings · ₹12.9 Cr · collections ₹7.0 Cr · commission invoiced ₹25.8 L</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BROKER -->
+<section class="pane" id="broker" hidden>
+  <h1>Broker portal · Rahul Mehta</h1>
+  <p class="sub">BRK-0218 · Mehta Realty Advisors · mobile view (PWA) · sees only his own leads and approved projects</p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Leads submitted</div><div class="v">31</div><div class="d">this quarter</div></div>
+    <div class="kpi"><div class="l">Bookings</div><div class="v">4</div><div class="d up">₹3.9 Cr sales value</div></div>
+    <div class="kpi"><div class="l">Commission earned</div><div class="v">₹4.21 L</div><div class="d">₹1.8 L paid · ₹2.41 L payable</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Live inventory · Riverside Enclave <span class="pill p-ok">price sheet v7 · 1 Oct</span></h3>
+      <div class="tw"><table>
+        <tr><th>Unit</th><th>Type</th><th class="num">Price</th><th>Status</th></tr>
+        <tr><td>A-702</td><td>2 BHK · 1,120 sq ft</td><td class="num">₹82,00,000</td><td><span class="pill p-info">Booked</span></td></tr>
+        <tr><td>A-903</td><td>2 BHK · 1,120 sq ft</td><td class="num">₹84,50,000</td><td><span class="pill p-ok">Available</span></td></tr>
+        <tr><td>B-1101</td><td>3 BHK · 1,480 sq ft</td><td class="num">₹1,12,00,000</td><td><span class="pill p-ok">Available</span></td></tr>
+        <tr><td>B-1204</td><td>3 BHK · 1,480 sq ft</td><td class="num">₹1,14,00,000</td><td><span class="pill p-hold">On hold</span></td></tr>
+      </table></div>
+      <p class="note">Brokers never see internal notes, other brokers' leads, developer commission terms or soleX margins.</p>
+    </div>
+    <div class="card">
+      <h3>Register a lead <span class="pill p-mut">lead protection 60 days</span></h3>
+      <div class="toolbar" style="flex-direction:column;align-items:stretch">
+        <input id="bl-name" placeholder="Customer name" value="Sanjay Trivedi">
+        <input id="bl-phone" placeholder="Mobile number" value="99xxx 20871">
+        <select id="bl-proj"><option>Riverside Enclave</option><option>Skyline Heights</option></select>
+        <button class="btn gold" data-toast="Lead registered and protected under BRK-0218 until 5 Dec 2026. soleX sales notified.">Submit lead</button>
+      </div>
+      <div class="alert warn" style="margin-top:8px">⚠ <div>If this number already exists with another source, the system flags it for soleX review instead of double-crediting.</div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var tabs=document.querySelectorAll('nav button'),panes=document.querySelectorAll('.pane');
+  function go(id){
+    panes.forEach(function(p){p.hidden=(p.id!==id)});
+    tabs.forEach(function(b){b.classList.toggle('on',b.dataset.tab===id)});
+    window.scrollTo({top:0});
+    try{localStorage.setItem('solex-tab',id)}catch(e){}
+  }
+  tabs.forEach(function(b){b.addEventListener('click',function(){go(b.dataset.tab)})});
+  var toast=document.getElementById('toast'),tt;
+  function say(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove('show')},2600)}
+  document.addEventListener('click',function(e){
+    var el=e.target.closest('[data-toast],[data-go]');if(!el)return;
+    if(el.dataset.go)go(el.dataset.go);
+    if(el.dataset.toast)say(el.dataset.toast);
+    if('remove' in el.dataset){var tr=el.closest('tr'),tb=tr.parentNode;tr.remove();
+      if(!tb.querySelector('td')){var em=tb.closest('.card').querySelector('#appr-empty');if(em)em.hidden=false;}}
+  });
+  var ip=document.getElementById('inv-proj'),it=document.getElementById('inv-tower');
+  var meta={'Skyline Heights':'Avani Developers · RERA PR/GJ/AHMEDABAD/123456 · 2 & 3 BHK · possession Dec 2027','Riverside Enclave':'Nirmaan Group · RERA PR/GJ/AHMEDABAD/118902 · 2 & 3 BHK · possession Jun 2027','Palm Courtyard':'Avani Developers · RERA PR/GJ/AHMEDABAD/131077 · 3 & 4 BHK · possession Mar 2028','Westgate Plaza':'Shree Infra · RERA PR/GJ/GANDHINAGAR/104411 · offices & retail · ready'};
+  function invTitle(){document.querySelector('#inv h1').textContent='Inventory · '+ip.value+', '+it.value;document.querySelector('#inv .sub').textContent=meta[ip.value]||'';}
+  ip.addEventListener('change',function(){invTitle();say('Showing '+ip.value+' (same grid reused in prototype).')});
+  it.addEventListener('change',invTitle);
+  // tower grid
+  var tower=document.getElementById('tower');
+  var st={av:'u-av',hold:'u-hold',bk:'u-bk',sold:'u-sold',blk:'u-blk'};
+  var pattern=['sold','sold','bk','sold','av','av','sold','bk','bk','av','hold','av','av','bk','av','hold','av','sold','av','av','hold','av','bk','av','av','av','hold','av','av','blk','av','av','av','av','av','av','av','av','av','av','av','av','av','av','av','av','av','av'];
+  var k=0,html='';
+  for(var f=12;f>=5;f--){
+    html+='<div class="floor"><span class="f">F'+f+'</span>';
+    for(var u=1;u<=6;u++){var s=pattern[k++];var no='B-'+f+'0'+u;var sel=no==='B-1204'?' sel':'';
+      html+='<button class="unit '+st[s]+sel+'" data-u="'+no+'" data-s="'+s+'" aria-label="'+no+'">'+no.slice(2)+'</button>'}
+    html+='</div>';
+  }
+  tower.innerHTML=html;
+  var label={av:['p-ok','Available'],hold:['p-hold','On hold · 48 h'],bk:['p-info','Booked'],sold:['p-sold','Sold · registered'],blk:['p-mut','Blocked (developer quota)']};
+  tower.addEventListener('click',function(e){
+    var b=e.target.closest('.unit');if(!b)return;
+    tower.querySelectorAll('.unit').forEach(function(x){x.classList.remove('sel')});b.classList.add('sel');
+    var s=b.dataset.s,no=b.dataset.u,fl=parseInt(no.slice(2,4),10)||5;
+    var three=parseInt(no.slice(-1),10)>3;var base=(three?1.28:0.94)+fl*0.007;
+    document.getElementById('u-title').textContent='Unit '+no;
+    var pl=label[s][0]==='p-sold'?'p-mut':label[s][0];
+    document.getElementById('u-dl').innerHTML=
+      '<dt>Status</dt><dd><span class="pill '+pl+'">'+label[s][1]+'</span></dd>'+
+      '<dt>Type</dt><dd>'+(three?'3 BHK · 1,640 sq ft carpet':'2 BHK · 1,180 sq ft carpet')+' · '+(parseInt(no.slice(-1),10)%2?'east':'west')+' facing</dd>'+
+      '<dt>Base price</dt><dd class="mono">₹'+base.toFixed(2)+' Cr</dd>'+
+      '<dt>Other charges</dt><dd class="mono">₹'+(three?'5,60,000':'4,10,000')+'</dd>'+
+      '<dt>Payment plan</dt><dd>20:30:30:20 construction-linked</dd>'+
+      '<dt>Last change</dt><dd>28 Sep · price revision (approved)</dd>';
+    say(no+' selected');
+  });
+  try{var t=localStorage.getItem('solex-tab');if(t&&document.getElementById(t))go(t)}catch(e){}
+  var h=location.hash.replace('#','');if(h&&document.getElementById(h))go(h);
+})();
+</script>
+
+</body></html>
